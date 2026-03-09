@@ -1,0 +1,27 @@
+# OpenVLA Base Model Configuration
+# Based on OpenVLA architecture
+
+model:
+  name: "openvla_base"
+  
+  vision:
+    type: "siglip"
+    pretrained: "siglip-so400m-patch14-384"
+    freeze: true
+    
+  language:
+    type: "llama"
+    pretrained: "meta-llama/Llama-2-7b-hf"
+    freeze: false
+    
+  fusion:
+    type: "concat"
+    hidden_dim: 4096
+    dropout: 0.1
+    
+  action_head:
+    type: "mlp"
+    action_dim: 7
+    chunk_size: 1
+    hidden_dim: 2048
+    dropout: 0.1

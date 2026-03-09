@@ -1,0 +1,33 @@
+# Custom VLA Model Configuration
+# Modify this for your specific needs
+
+model:
+  name: "custom_vla"
+  
+  vision:
+    # Options: siglip, vit, resnet
+    type: "siglip"
+    pretrained: "siglip-so400m-patch14-384"
+    freeze: false  # Set to true to save memory
+    
+  language:
+    # Options: gemma, qwen, llama
+    type: "gemma"
+    pretrained: "google/gemma-2b"
+    freeze: true  # Recommended for most cases
+    
+  fusion:
+    # Options: cross_attention, concat, film
+    type: "cross_attention"
+    hidden_dim: 768
+    num_heads: 8
+    num_layers: 2
+    dropout: 0.1
+    
+  action_head:
+    # Options: flow_matching, diffusion, mlp
+    type: "flow_matching"
+    action_dim: 7  # Adjust for your robot
+    chunk_size: 10  # Number of timesteps to predict
+    hidden_dim: 512
+    num_steps: 50  # Sampling steps (for flow matching/diffusion)

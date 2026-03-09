@@ -1,0 +1,36 @@
+# VLA Training Framework - Requirements
+
+# Core
+torch>=2.0.0
+torchvision>=0.15.0
+numpy>=1.24.0
+
+# Transformers
+transformers>=4.35.0
+tokenizers>=0.15.0
+
+# Data
+pillow>=10.0.0
+opencv-python>=4.8.0
+scipy>=1.11.0
+
+# Configuration
+pyyaml>=6.0
+
+# Progress
+tqdm>=4.66.0
+
+# Optional: WandB logging
+# wandb>=0.16.0
+
+# Optional: TensorRT deployment
+# tensorrt>=8.6.0
+# pycuda>=2023.1.1
+
+# Optional: LeRobot support
+# lerobot>=0.1.0
+
+# Development
+# pytest>=7.4.0
+# black>=23.0.0
+# flake8>=6.0.0

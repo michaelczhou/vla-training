@@ -1,0 +1,25 @@
+# ALOHA Dataset Configuration
+
+data:
+  type: "lerobot"
+  data_dir: "data/aloha"
+  
+  image:
+    height: 224
+    width: 224
+    normalize: true
+    color_jitter: true
+    random_crop: true
+    flip: true
+    
+  action:
+    dim: 14  # ALOHA: 2 arms x 7 DoF
+    chunk_size: 10
+    normalize: true
+    # Optional: specify normalization statistics
+    # min_values: [-3.14, -3.14, -3.14, -3.14, -3.14, -3.14, -3.14, ...]
+    # max_values: [3.14, 3.14, 3.14, 3.14, 3.14, 3.14, 3.14, ...]
+    
+  max_text_length: 64
+  num_workers: 4
+  pin_memory: true
