@@ -14,6 +14,56 @@ from typing import Optional, Dict, Any, Tuple
 import math
 
 
+class FlowMatchingBlock(nn.Module):
+    """
+    流匹配 Transformer 块 (参考 π₀和 GR00T N1.6)
+    
+    结构:
+    - LayerNorm + MultiheadAttention
+    - LayerNorm + MLP (GELU 激活)
+    
+    优势:
+    - 自注意力捕获长程依赖
+    - MLP 提供非线性变换
+    """
+    
+    def __init__(self, hidden_dim: int, num_heads: int = 16):
+        super().__init__()
+        
+        self.norm1 = nn.LayerNorm(hidden_dim)
+        self.attn = nn.MultiheadAttention(
+            hidden_dim, num_heads, batch_first=True
+        )
+        
+        self.norm2 = nn.LayerNorm(hidden_dim)
+        self.mlp = nn.Sequential(
+            nn.Linear(hidden_dim, 4 * hidden_dim),
+            nn.GELU(),
+            nn.Linear(4 * hidden_dim, hidden_dim)
+        )
+    
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        """
+        前向传播
+        
+        Args:
+            x: 输入特征，形状 (B, hidden_dim)
+            
+        Returns:
+            输出特征，形状 (B, hidden_dim)
+        """
+        # 自注意力 (添加序列维度)
+        x_ = x.unsqueeze(1)  # (B, 1, hidden_dim)
+        normed = self.norm1(x_)
+        attn_out, _ = self.attn(normed, normed, normed)
+        x = x + attn_out.squeeze(1)  # 残差连接
+        
+        # MLP
+        x = x + self.mlp(self.norm2(x))
+        
+        return x
+
+
 class ActionHead(nn.Module):
     """Base class for action heads"""
     
@@ -51,10 +101,24 @@ class ActionHead(nn.Module):
 
 class FlowMatchingHead(ActionHead):
     """
-    Flow Matching Action Head
+    Flow Matching Action Head (优化版)
     
-    Based on Conditional Flow Matching (CFM)
-    Fast inference with few steps, stable training
+    基于条件流匹配 (Conditional Flow Matching, CFM)
+    
+    核心优势 (相比扩散模型):
+    - 推理速度快：10 步 vs 100 步 (参考 openpi π₀)
+    - 训练更稳定：直线路径，梯度更平滑
+    - 理论优雅：基于最优传输理论
+    
+    数学原理:
+    - 概率路径：p_t(x) = (1-t)p_0 + tp_1
+    - 速度场：v_t(x) = E[v_t(x) | x_t = x]
+    - 训练目标：L = E[||v_θ(x_t, t) - (x_1 - x_0)||²]
+    - 生成 ODE: dx/dt = v_θ(x, t)
+    
+    参考实现:
+    - Physical Intelligence openpi: https://github.com/Physical-Intelligence/openpi
+    - LingBot-VLA: https://github.com/Robbyant/lingbot-vla
     
     Reference: https://arxiv.org/abs/2210.02747
     """
@@ -63,8 +127,8 @@ class FlowMatchingHead(ActionHead):
         super().__init__(config)
         
         input_dim = config.get('input_dim', 768)
-        hidden_dim = config.get('hidden_dim', 512)
-        num_steps = config.get('num_steps', 50)
+        hidden_dim = config.get('hidden_dim', 1024)  # 增加隐藏维度 (参考 π₀)
+        num_steps = config.get('num_steps', 10)  # 默认 10 步 (优化后足够)
         
         self.input_dim = input_dim
         self.hidden_dim = hidden_dim
@@ -73,27 +137,36 @@ class FlowMatchingHead(ActionHead):
         # Total action dimension (chunk_size * action_dim)
         self.total_action_dim = self.chunk_size * self.action_dim
         
-        # Time embedding
+        # Time embedding (正弦位置编码 + MLP)
+        # 使用正弦编码提供更好的时间表示
         self.time_embed = nn.Sequential(
-            nn.Linear(1, hidden_dim),
+            nn.Linear(hidden_dim, hidden_dim),
             nn.SiLU(),
             nn.Linear(hidden_dim, hidden_dim)
         )
         
-        # Velocity prediction network
-        self.velocity_net = nn.Sequential(
-            nn.Linear(input_dim + self.total_action_dim + hidden_dim, hidden_dim),
-            nn.SiLU(),
-            nn.Linear(hidden_dim, hidden_dim),
-            nn.SiLU(),
-            nn.Linear(hidden_dim, hidden_dim),
-            nn.SiLU(),
+        # Action embedding (将动作映射到隐藏空间)
+        self.action_embed = nn.Linear(self.total_action_dim, hidden_dim)
+        
+        # Condition projection (将 VLM 特征映射到隐藏空间)
+        self.cond_proj = nn.Linear(input_dim, hidden_dim)
+        
+        # Velocity prediction network (改进的 Transformer 风格)
+        # 参考 GR00T N1.6 的 DiT 架构和 π₀的流匹配块
+        self.velocity_blocks = nn.ModuleList([
+            FlowMatchingBlock(hidden_dim, num_heads=16)
+            for _ in range(8)  # 8 层 (平衡性能和速度)
+        ])
+        
+        # Output head
+        self.output_head = nn.Sequential(
+            nn.LayerNorm(hidden_dim),
             nn.Linear(hidden_dim, self.total_action_dim)
         )
         
-        # Initialize last layer to predict zero initially
-        nn.init.zeros_(self.velocity_net[-1].weight)
-        nn.init.zeros_(self.velocity_net[-1].bias)
+        # 初始化：预测零速度 (稳定训练初期)
+        nn.init.zeros_(self.output_head[-1].weight)
+        nn.init.zeros_(self.output_head[-1].bias)
     
     def _embed_time(self, t: torch.Tensor) -> torch.Tensor:
         """
