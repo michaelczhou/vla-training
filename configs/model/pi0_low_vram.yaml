@@ -1,0 +1,74 @@
+# PI0 Model Configuration for Low VRAM (8-12GB)
+# 针对低显存显卡优化的配置 (RTX 3060, 3060 Ti, 4060, etc.)
+
+model:
+  name: "pi0_low_vram"
+  description: "Optimized for 8-12GB VRAM GPUs"
+  
+  vision:
+    type: "vit"
+    model_name: "vit_base_patch16_224"
+    pretrained: true
+    freeze: true  # 冻结视觉编码器节省显存
+    image_size: 224
+    
+  language:
+    type: "gemma"
+    model_name: "google/gemma-2b"
+    freeze: true
+    max_length: 256  # 减少最大长度
+    
+  fusion:
+    type: "cross_attention"
+    hidden_dim: 512
+    num_heads: 8
+    num_layers: 2
+    dropout: 0.1
+    
+  action_head:
+    type: "flow_matching"
+    action_dim: 7
+    chunk_size: 10
+    hidden_dim: 512
+    num_layers: 4
+    num_steps: 25  # 减少推理步数
+    dropout: 0.1
+    
+  gradient_checkpointing: true
+  mixed_precision: true
+
+training:
+  batch_size: 2  # 小 batch size
+  num_epochs: 100
+  grad_accum_steps: 16  # 大梯度累积模拟大 batch
+  
+  optimizer:
+    type: "AdamW"
+    lr: 1e-4  # 降低学习率
+    weight_decay: 0.1
+    betas: [0.9, 0.95]
+    
+  scheduler:
+    type: "cosine"
+    warmup_steps: 1000
+    min_lr: 1e-6
+    
+  gradient_checkpointing: true
+  mixed_precision: "fp16"
+  
+  # 显存优化技巧
+  empty_cache_every: 100  # 定期清理缓存
+  
+  checkpoint:
+    save_every: 500
+    keep_last: 3
+    
+  logging:
+    log_every: 25
+    wandb_project: "vla-training-low-vram"
+    
+hardware:
+  device: "cuda"
+  gpu_ids: [0]
+  num_workers: 4
+  pin_memory: true

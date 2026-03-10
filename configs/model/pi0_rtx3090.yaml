@@ -1,0 +1,71 @@
+# PI0 Model Configuration for RTX 3090 (24GB VRAM)
+# 针对 RTX 3090 优化的配置
+
+model:
+  name: "pi0_rtx3090"
+  description: "Optimized for RTX 3090 24GB VRAM"
+  
+  vision:
+    type: "siglip"
+    model_name: "google/siglip-base-patch16-224"
+    pretrained: true
+    freeze: false
+    image_size: 224
+    
+  language:
+    type: "gemma"
+    model_name: "google/gemma-2b"
+    freeze: true
+    max_length: 512
+    
+  fusion:
+    type: "cross_attention"
+    hidden_dim: 768
+    num_heads: 12
+    num_layers: 4
+    dropout: 0.1
+    
+  action_head:
+    type: "flow_matching"
+    action_dim: 7
+    chunk_size: 10
+    hidden_dim: 768
+    num_layers: 6
+    num_steps: 50
+    dropout: 0.1
+    
+  gradient_checkpointing: true
+  mixed_precision: true
+
+training:
+  batch_size: 8
+  num_epochs: 100
+  grad_accum_steps: 4
+  
+  optimizer:
+    type: "AdamW"
+    lr: 3e-4
+    weight_decay: 0.1
+    betas: [0.9, 0.95]
+    
+  scheduler:
+    type: "cosine"
+    warmup_steps: 2000
+    min_lr: 1e-6
+    
+  gradient_checkpointing: true
+  mixed_precision: "fp16"
+  
+  checkpoint:
+    save_every: 1000
+    keep_last: 5
+    
+  logging:
+    log_every: 50
+    wandb_project: "vla-training-rtx3090"
+    
+hardware:
+  device: "cuda"
+  gpu_ids: [0]
+  num_workers: 8
+  pin_memory: true

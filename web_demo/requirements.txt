@@ -1,0 +1,5 @@
+# Web Demo Requirements
+gradio>=4.0.0
+pillow>=10.0.0
+matplotlib>=3.7.0
+numpy>=1.24.0

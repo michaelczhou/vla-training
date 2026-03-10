@@ -1,0 +1,75 @@
+# PI0 Model Configuration for RTX 4090 (24GB VRAM)
+# 针对 RTX 4090 优化的配置
+
+model:
+  name: "pi0_rtx4090"
+  description: "Optimized for RTX 4090 24GB VRAM"
+  
+  vision:
+    type: "siglip"
+    model_name: "google/siglip-so400m-patch14-384"
+    pretrained: true
+    freeze: false
+    image_size: 384
+    
+  language:
+    type: "gemma"
+    model_name: "google/gemma-2b"
+    freeze: true  # 冻结以节省显存
+    max_length: 512
+    
+  fusion:
+    type: "cross_attention"
+    hidden_dim: 1024
+    num_heads: 16
+    num_layers: 6
+    dropout: 0.1
+    
+  action_head:
+    type: "flow_matching"
+    action_dim: 7
+    chunk_size: 10
+    hidden_dim: 1024
+    num_layers: 8
+    num_steps: 50
+    dropout: 0.1
+    
+  # 内存优化
+  gradient_checkpointing: true
+  mixed_precision: true
+
+# Training Configuration
+training:
+  batch_size: 16  # RTX 4090 可以支持更大的 batch
+  num_epochs: 100
+  grad_accum_steps: 2
+  
+  optimizer:
+    type: "AdamW"
+    lr: 3e-4
+    weight_decay: 0.1
+    betas: [0.9, 0.95]
+    
+  scheduler:
+    type: "cosine"
+    warmup_steps: 2000
+    min_lr: 1e-6
+    
+  # 显存优化
+  gradient_checkpointing: true
+  mixed_precision: "fp16"  # 使用 FP16 混合精度
+  
+  checkpoint:
+    save_every: 1000
+    keep_last: 5
+    
+  logging:
+    log_every: 50
+    wandb_project: "vla-training-rtx4090"
+    
+# Hardware
+hardware:
+  device: "cuda"
+  gpu_ids: [0]
+  num_workers: 8
+  pin_memory: true
