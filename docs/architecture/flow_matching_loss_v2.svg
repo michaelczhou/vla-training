@@ -1,0 +1,196 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="1600" height="1200" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- 渐变色 -->
+    <linearGradient id="greenGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#10B981;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#34D399;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="blueGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#3B82F6;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#60A5FA;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="purpleGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#8B5CF6;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#A78BFA;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="orangeGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#F59E0B;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#FBBF24;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="pinkGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#EC4899;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#F472B6;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="redGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#EF4444;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#F87171;stop-opacity:1" />
+    </linearGradient>
+    
+    <!-- 箭头 -->
+    <marker id="arrowhead" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto">
+      <polygon points="0 0, 12 6, 0 12" fill="#333" />
+    </marker>
+    
+    <!-- 阴影 -->
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="3" dy="3" stdDeviation="4" flood-opacity="0.25"/>
+    </filter>
+  </defs>
+  
+  <!-- 背景 -->
+  <rect width="1600" height="1200" fill="#F8FAFC"/>
+  
+  <!-- 标题 -->
+  <text x="800" y="50" font-family="Arial, sans-serif" font-size="28" font-weight="bold" text-anchor="middle" fill="#1E293B">
+    Flow Matching Loss 计算流程详解
+  </text>
+  <text x="800" y="80" font-family="Arial, sans-serif" font-size="16" text-anchor="middle" fill="#64748B">
+    从目标动作到速度场预测的完整 Loss 计算过程
+  </text>
+  
+  <!-- ==================== 输入 ==================== -->
+  <!-- Target Actions -->
+  <rect x="80" y="130" width="260" height="120" fill="url(#greenGrad)" rx="10" filter="url(#shadow)"/>
+  <text x="210" y="170" font-family="Arial" font-size="16" font-weight="bold" text-anchor="middle" fill="white">Target Actions x₀</text>
+  <text x="210" y="200" font-family="Arial" font-size="14" text-anchor="middle" fill="white">[B, 50, 7]</text>
+  <text x="210" y="230" font-family="Arial" font-size="11" text-anchor="middle" fill="white">真实动作数据</text>
+  
+  <!-- Noise -->
+  <rect x="390" y="130" width="260" height="120" fill="url(#blueGrad)" rx="10" filter="url(#shadow)"/>
+  <text x="520" y="170" font-family="Arial" font-size="16" font-weight="bold" text-anchor="middle" fill="white">Noise x₁</text>
+  <text x="520" y="200" font-family="Arial" font-size="14" text-anchor="middle" fill="white">[B, 50, 7]</text>
+  <text x="520" y="230" font-family="Arial" font-size="11" text-anchor="middle" fill="white">x₁ ~ N(0, I)</text>
+  
+  <!-- Context -->
+  <rect x="700" y="130" width="260" height="120" fill="url(#purpleGrad)" rx="10" filter="url(#shadow)"/>
+  <text x="830" y="170" font-family="Arial" font-size="16" font-weight="bold" text-anchor="middle" fill="white">Context c</text>
+  <text x="830" y="200" font-family="Arial" font-size="14" text-anchor="middle" fill="white">[B, 2048]</text>
+  <text x="830" y="230" font-family="Arial" font-size="11" text-anchor="middle" fill="white">来自 VLM Encoder</text>
+  
+  <!-- ==================== 线性插值 ==================== -->
+  <rect x="1010" y="130" width="320" height="120" fill="url(#orangeGrad)" rx="10" filter="url(#shadow)"/>
+  <text x="1170" y="165" font-family="Arial" font-size="16" font-weight="bold" text-anchor="middle" fill="white">Linear Interpolation</text>
+  <text x="1170" y="195" font-family="Arial" font-size="13" text-anchor="middle" fill="white">x_t = (1-t)·x₀ + t·x₁</text>
+  <text x="1170" y="225" font-family="Courier" font-size="11" text-anchor="middle" fill="white">t ~ Uniform(0,1)</text>
+  <text x="1170" y="245" font-family="Arial" font-size="11" text-anchor="middle" fill="white">Output: [B, 50, 7]</text>
+  
+  <!-- ==================== Flow Decoder ==================== -->
+  <rect x="1380" y="130" width="200" height="120" fill="url(#pinkGrad)" rx="10" filter="url(#shadow)"/>
+  <text x="1480" y="165" font-family="Arial" font-size="15" font-weight="bold" text-anchor="middle" fill="white">Flow Decoder</text>
+  <text x="1480" y="195" font-family="Arial" font-size="12" text-anchor="middle" fill="white">v_θ(x_t, t, c)</text>
+  <text x="1480" y="225" font-family="Arial" font-size="11" text-anchor="middle" fill="white">U-Net 架构</text>
+  
+  <!-- ==================== Predicted Velocity ==================== -->
+  <rect x="1330" y="300" width="300" height="100" fill="#F472B6" rx="10" filter="url(#shadow)"/>
+  <text x="1480" y="335" font-family="Arial" font-size="15" font-weight="bold" text-anchor="middle" fill="white">Predicted Velocity v_θ</text>
+  <text x="1480" y="365" font-family="Arial" font-size="13" text-anchor="middle" fill="white">[B, 50, 7]</text>
+  <text x="1480" y="390" font-family="Arial" font-size="11" text-anchor="middle" fill="white">模型预测的速度场</text>
+  
+  <!-- ==================== Target Velocity ==================== -->
+  <rect x="1010" y="300" width="320" height="100" fill="#FCD34D" rx="10" filter="url(#shadow)" stroke="#F59E0B" stroke-width="2"/>
+  <text x="1170" y="335" font-family="Arial" font-size="15" font-weight="bold" text-anchor="middle" fill="white">Target Velocity v*</text>
+  <text x="1170" y="365" font-family="Arial" font-size="13" text-anchor="middle" fill="white">v* = x₁ - x₀</text>
+  <text x="1170" y="390" font-family="Arial" font-size="11" text-anchor="middle" fill="white">真实速度场</text>
+  
+  <!-- ==================== MSE Loss ==================== -->
+  <rect x="1010" y="450" width="320" height="120" fill="url(#redGrad)" rx="10" filter="url(#shadow)"/>
+  <text x="1170" y="485" font-family="Arial" font-size="17" font-weight="bold" text-anchor="middle" fill="white">MSE Loss</text>
+  <text x="1170" y="520" font-family="Arial" font-size="14" text-anchor="middle" fill="white">L = ||v_θ - v*||²₂</text>
+  <text x="1170" y="550" font-family="Courier" font-size="11" text-anchor="middle" fill="white">标量 Loss 值</text>
+  
+  <!-- ==================== Backward Pass ==================== -->
+  <rect x="1010" y="620" width="320" height="120" fill="#DC2626" rx="10" filter="url(#shadow)"/>
+  <text x="1170" y="655" font-family="Arial" font-size="17" font-weight="bold" text-anchor="middle" fill="white">Backward Pass</text>
+  <text x="1170" y="690" font-family="Arial" font-size="12" text-anchor="middle" fill="white">梯度反向传播</text>
+  <text x="1170" y="720" font-family="Courier" font-size="11" text-anchor="middle" fill="white">∇_θ L → 更新模型参数</text>
+  
+  <!-- ==================== 详细公式框 ==================== -->
+  <rect x="80" y="300" width="880" height="420" fill="#FFFFFF" rx="10" stroke="#333" stroke-width="2" filter="url(#shadow)"/>
+  <text x="520" y="335" font-family="Arial" font-size="18" font-weight="bold" text-anchor="middle" fill="#1E293B">Flow Matching 完整数学推导</text>
+  
+  <!-- 1. 概率路径 -->
+  <text x="100" y="380" font-family="Arial" font-size="13" fill="#1E293B" font-weight="bold">1. 概率路径 (Probability Path):</text>
+  <text x="120" y="408" font-family="Courier" font-size="11" fill="#333">p_t(x) = (1-t)·p₀(x) + t·p₁(x),  t ∈ [0,1]</text>
+  <text x="120" y="428" font-family="Courier" font-size="11" fill="#333">p₀: 数据分布，p₁: 标准高斯噪声 N(0,I)</text>
+  
+  <!-- 2. 连续性方程 -->
+  <text x="100" y="465" font-family="Arial" font-size="13" fill="#1E293B" font-weight="bold">2. 连续性方程 (Continuity Equation):</text>
+  <text x="120" y="493" font-family="Courier" font-size="11" fill="#333">∂p_t/∂t + ∇·(p_t·v_t) = 0</text>
+  <text x="120" y="513" font-family="Courier" font-size="11" fill="#333">v_t(x): 速度场，描述概率密度的流动</text>
+  
+  <!-- 3. 最优传输 -->
+  <text x="100" y="550" font-family="Arial" font-size="13" fill="#1E293B" font-weight="bold">3. 最优传输流 (Optimal Transport Flow):</text>
+  <text x="120" y="578" font-family="Courier" font-size="11" fill="#333">min_v ∫₀¹ E_{p_t}[||v_t(x)||²] dt</text>
+  <text x="120" y="598" font-family="Courier" font-size="11" fill="#333">约束：∂p_t/∂t + ∇·(p_t·v_t) = 0</text>
+  <text x="120" y="618" font-family="Courier" font-size="11" fill="#333">解：线性插值 x_t = (1-t)x₀ + tx₁</text>
+  
+  <!-- 4. 条件流匹配 Loss -->
+  <text x="100" y="655" font-family="Arial" font-size="13" fill="#1E293B" font-weight="bold">4. 条件流匹配 Loss (Conditional FM):</text>
+  <text x="120" y="683" font-family="Courier" font-size="11" fill="#333">L_FM(θ) = E_{t,x₀,x₁,c}[||v_θ(x_t,t,c) - (x₁-x₀)||²]</text>
+  <text x="120" y="703" font-family="Courier" font-size="11" fill="#333">其中：x_t = (1-t)x₀ + tx₁</text>
+  <text x="120" y="723" font-family="Courier" font-size="11" fill="#333">t ~ Uniform(0,1), x₁ ~ N(0,I)</text>
+  
+  <!-- 5. 推理过程 -->
+  <text x="100" y="760" font-family="Arial" font-size="13" fill="#1E293B" font-weight="bold">5. 推理 (Inference - Euler Integration):</text>
+  <text x="120" y="788" font-family="Courier" font-size="11" fill="#333">x^{τ+Δτ} = x^τ + Δτ·v_θ(x^τ, τ, c)</text>
+  <text x="120" y="808" font-family="Courier" font-size="11" fill="#333">从 τ=0 (噪声) 积分到 τ=1 (数据)</text>
+  <text x="120" y="828" font-family="Courier" font-size="11" fill="#333">通常使用 5-10 个去噪步</text>
+  
+  <!-- ==================== 训练算法伪代码 ==================== -->
+  <rect x="80" y="750" width="880" height="430" fill="#FEF3C7" rx="10" stroke="#F59E0B" stroke-width="2"/>
+  <text x="520" y="785" font-family="Arial" font-size="16" font-weight="bold" text-anchor="middle" fill="#92400E">训练算法伪代码</text>
+  
+  <text x="100" y="820" font-family="Courier" font-size="11" fill="#78350F">Algorithm 1: Flow Matching Training</text>
+  <text x="100" y="845" font-family="Courier" font-size="11" fill="#78350F">Input: 训练数据 D = {(x₀, c)}, 模型 v_θ, 学习率 η</text>
+  <text x="100" y="870" font-family="Courier" font-size="11" fill="#78350F">for epoch = 1 to num_epochs do</text>
+  <text x="120" y="895" font-family="Courier" font-size="11" fill="#78350F">  for batch (x₀, c) in D do</text>
+  <text x="140" y="920" font-family="Courier" font-size="11" fill="#78350F">    # 1. 采样噪声和时间</text>
+  <text x="140" y="940" font-family="Courier" font-size="11" fill="#78350F">    x₁ ~ N(0, I)</text>
+  <text x="140" y="960" font-family="Courier" font-size="11" fill="#78350F">    t ~ Uniform(0, 1)</text>
+  <text x="140" y="985" font-family="Courier" font-size="11" fill="#78350F">    # 2. 线性插值</text>
+  <text x="140" y="1005" font-family="Courier" font-size="11" fill="#78350F">    x_t = (1-t)·x₀ + t·x₁</text>
+  <text x="140" y="1030" font-family="Courier" font-size="11" fill="#78350F">    # 3. 前向传播</text>
+  <text x="140" y="1050" font-family="Courier" font-size="11" fill="#78350F">    v_pred = v_θ(x_t, t, c)</text>
+  <text x="140" y="1070" font-family="Courier" font-size="11" fill="#78350F">    v_target = x₁ - x₀</text>
+  <text x="140" y="1095" font-family="Courier" font-size="11" fill="#78350F">    # 4. 计算 Loss</text>
+  <text x="140" y="1115" font-family="Courier" font-size="11" fill="#78350F">    loss = MSE(v_pred, v_target)</text>
+  <text x="140" y="1140" font-family="Courier" font-size="11" fill="#78350F">    # 5. 反向传播</text>
+  <text x="140" y="1160" font-family="Courier" font-size="11" fill="#78350F">    θ ← θ - η·∇_θ(loss)</text>
+  <text x="100" y="1185" font-family="Courier" font-size="11" fill="#78350F">return θ</text>
+  
+  <!-- ==================== 关键要点 ==================== -->
+  <rect x="1010" y="790" width="570" height="390" fill="#FFFFFF" rx="10" stroke="#333" stroke-width="1"/>
+  <text x="1295" y="825" font-family="Arial" font-size="16" font-weight="bold" text-anchor="middle" fill="#1E293B">关键要点说明</text>
+  
+  <text x="1030" y="860" font-family="Arial" font-size="12" fill="#1E293B" font-weight="bold">✓ 流匹配 vs 扩散模型:</text>
+  <text x="1050" y="883" font-family="Arial" font-size="11" fill="#333">• 流匹配：直接学习速度场 v_t</text>
+  <text x="1050" y="903" font-family="Arial" font-size="11" fill="#333">• 扩散模型：学习去噪 ε_θ</text>
+  <text x="1050" y="923" font-family="Arial" font-size="11" fill="#333">• 流匹配推理更快 (5-10 步 vs 50-1000 步)</text>
+  
+  <text x="1030" y="955" font-family="Arial" font-size="12" fill="#1E293B" font-weight="bold">✓ 线性插值的优势:</text>
+  <text x="1050" y="978" font-family="Arial" font-size="11" fill="#333">• 简单高效，无需学习复杂路径</text>
+  <text x="1050" y="998" font-family="Arial" font-size="11" fill="#333">• 直线路径是最优传输解</text>
+  <text x="1050" y="1018" font-family="Arial" font-size="11" fill="#333">• 训练稳定性好</text>
+  
+  <text x="1030" y="1050" font-family="Arial" font-size="12" fill="#1E293B" font-weight="bold">✓ Loss 设计:</text>
+  <text x="1050" y="1073" font-family="Arial" font-size="11" fill="#333">• MSE Loss 简单有效</text>
+  <text x="1050" y="1093" font-family="Arial" font-size="11" fill="#333">• 无需加权，所有时间步平等对待</text>
+  <text x="1050" y="1113" font-family="Arial" font-size="11" fill="#333">• 梯度传播稳定</text>
+  
+  <text x="1030" y="1145" font-family="Arial" font-size="12" fill="#1E293B" font-weight="bold">✓ 条件生成:</text>
+  <text x="1050" y="1168" font-family="Arial" font-size="11" fill="#333">• 通过 context c conditioning</text>
+  <text x="1050" y="1188" font-family="Arial" font-size="11" fill="#333">• 支持多模态输入 (图像 + 语言 + 状态)</text>
+  
+  <!-- 连接箭头 -->
+  <line x1="340" y1="190" x2="385" y2="190" stroke="#333" stroke-width="2" marker-end="url(#arrowhead)"/>
+  <line x1="650" y1="190" x2="695" y2="190" stroke="#333" stroke-width="2" marker-end="url(#arrowhead)"/>
+  <line x1="960" y1="190" x2="1005" y2="190" stroke="#333" stroke-width="2" marker-end="url(#arrowhead)"/>
+  <line x1="1330" y1="190" x2="1375" y2="190" stroke="#333" stroke-width="2" marker-end="url(#arrowhead)"/>
+  <path d="M 210 250 L 210 320 L 1150 320 L 1150 350" stroke="#333" stroke-width="2" marker-end="url(#arrowhead)"/>
+  <path d="M 520 250 L 520 300 L 1150 300 L 1150 350" stroke="#333" stroke-width="2" marker-end="url(#arrowhead)"/>
+  <path d="M 1480 250 L 1480 295" stroke="#333" stroke-width="2" marker-end="url(#arrowhead)"/>
+  <line x1="1480" y1="400" x2="1480" y2="445" stroke="#333" stroke-width="2" marker-end="url(#arrowhead)"/>
+  <path d="M 1330 350 L 1250 350 L 1250 445" stroke="#333" stroke-width="2" marker-end="url(#arrowhead)"/>
+  <line x1="1170" y1="570" x2="1170" y2="615" stroke="#333" stroke-width="2" marker-end="url(#arrowhead)"/>
+</svg>

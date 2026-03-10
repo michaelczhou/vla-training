@@ -1,0 +1,218 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="1600" height="1400" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- 渐变色定义 -->
+    <linearGradient id="purpleGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#8B5CF6;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#A78BFA;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="orangeGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#F59E0B;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#FBBF24;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="pinkGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#EC4899;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#F472B6;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="blueGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#3B82F6;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#60A5FA;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="greenGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#10B981;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#34D399;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="redGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#EF4444;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#F87171;stop-opacity:1" />
+    </linearGradient>
+    
+    <!-- 箭头 -->
+    <marker id="arrowhead" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto">
+      <polygon points="0 0, 12 6, 0 12" fill="#333" />
+    </marker>
+    
+    <!-- 阴影 -->
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="3" dy="3" stdDeviation="4" flood-opacity="0.25"/>
+    </filter>
+  </defs>
+  
+  <!-- 背景 -->
+  <rect width="1600" height="1400" fill="#F8FAFC"/>
+  
+  <!-- 标题 -->
+  <text x="800" y="50" font-family="Arial, sans-serif" font-size="28" font-weight="bold" text-anchor="middle" fill="#1E293B">
+    Action Expert Decoder - Flow Matching U-Net
+  </text>
+  <text x="800" y="80" font-family="Arial, sans-serif" font-size="16" text-anchor="middle" fill="#64748B">
+    速度场预测网络：v_θ(noisy_actions, context, timestep) → velocity
+  </text>
+  
+  <!-- ==================== 输入层 ==================== -->
+  <!-- VLM Context -->
+  <rect x="100" y="130" width="240" height="110" fill="url(#purpleGrad)" rx="10" filter="url(#shadow)"/>
+  <text x="220" y="165" font-family="Arial" font-size="16" font-weight="bold" text-anchor="middle" fill="white">VLM Context</text>
+  <text x="220" y="195" font-family="Arial" font-size="14" text-anchor="middle" fill="white">[B, 2048]</text>
+  <text x="220" y="220" font-family="Arial" font-size="11" text-anchor="middle" fill="white">来自 Encoder</text>
+  
+  <!-- Noisy Actions -->
+  <rect x="390" y="130" width="240" height="110" fill="url(#orangeGrad)" rx="10" filter="url(#shadow)"/>
+  <text x="510" y="165" font-family="Arial" font-size="16" font-weight="bold" text-anchor="middle" fill="white">Noisy Actions</text>
+  <text x="510" y="195" font-family="Arial" font-size="14" text-anchor="middle" fill="white">[B, 50, 7]</text>
+  <text x="510" y="220" font-family="Arial" font-size="11" text-anchor="middle" fill="white">x_t = (1-t)x₀ + tx₁</text>
+  
+  <!-- Timestep -->
+  <rect x="680" y="130" width="240" height="110" fill="url(#pinkGrad)" rx="10" filter="url(#shadow)"/>
+  <text x="800" y="165" font-family="Arial" font-size="16" font-weight="bold" text-anchor="middle" fill="white">Timestep τ</text>
+  <text x="800" y="195" font-family="Arial" font-size="14" text-anchor="middle" fill="white">[B,]</text>
+  <text x="800" y="220" font-family="Arial" font-size="11" text-anchor="middle" fill="white">τ ~ Uniform(0,1)</text>
+  
+  <!-- ==================== Condition Encoder ==================== -->
+  <rect x="1000" y="130" width="320" height="160" fill="url(#blueGrad)" rx="10" filter="url(#shadow)"/>
+  <text x="1160" y="165" font-family="Arial" font-size="17" font-weight="bold" text-anchor="middle" fill="white">Condition Encoder</text>
+  
+  <rect x="1020" y="185" width="280" height="45" fill="rgba(255,255,255,0.25)" rx="6"/>
+  <text x="1160" y="210" font-family="Arial" font-size="12" text-anchor="middle" fill="white">Concat: [context, actions_flat, time_emb]</text>
+  <text x="1160" y="230" font-family="Arial" font-size="11" text-anchor="middle" fill="white">[2048 + 350 + 512] = [2910]</text>
+  
+  <rect x="1020" y="240" width="280" height="40" fill="rgba(255,255,255,0.2)" rx="5"/>
+  <text x="1160" y="265" font-family="Arial" font-size="12" font-weight="bold" text-anchor="middle" fill="white">MLP: 2910 → 2048</text>
+  <text x="1160" y="285" font-family="Arial" font-size="11" text-anchor="middle" fill="white">Linear + SiLU + Linear</text>
+  
+  <!-- ==================== U-Net Backbone ==================== -->
+  <rect x="100" y="340" width="1400" height="520" fill="#FFFFFF" rx="10" stroke="#333" stroke-width="2" filter="url(#shadow)"/>
+  <text x="800" y="375" font-family="Arial" font-size="18" font-weight="bold" text-anchor="middle" fill="#1E293B">U-Net Backbone</text>
+  
+  <!-- Down Block 1 -->
+  <rect x="150" y="410" width="280" height="140" fill="url(#orangeGrad)" rx="8"/>
+  <text x="290" y="440" font-family="Arial" font-size="15" font-weight="bold" text-anchor="middle" fill="white">Down Block 1</text>
+  <text x="290" y="470" font-family="Arial" font-size="12" text-anchor="middle" fill="white">ResnetBlock(2048→2048)</text>
+  <text x="290" y="492" font-family="Arial" font-size="12" text-anchor="middle" fill="white">ResnetBlock(2048→2048)</text>
+  <text x="290" y="522" font-family="Arial" font-size="11" text-anchor="middle" fill="white">Output: [B, 2048]</text>
+  <text x="290" y="542" font-family="Arial" font-size="10" text-anchor="middle" fill="white">↓ Skip to Up Block</text>
+  
+  <!-- Downsample 1 -->
+  <path d="M 430 480 L 470 480 L 470 550 L 510 550" stroke="#333" stroke-width="2" marker-end="url(#arrowhead)"/>
+  <text x="490" y="535" font-family="Arial" font-size="10" fill="#666" font-weight="bold">Down</text>
+  
+  <!-- Down Block 2 -->
+  <rect x="550" y="490" width="280" height="140" fill="#FDE68A" rx="8" stroke="#F59E0B" stroke-width="2"/>
+  <text x="690" y="520" font-family="Arial" font-size="15" font-weight="bold" text-anchor="middle" fill="white">Down Block 2</text>
+  <text x="690" y="550" font-family="Arial" font-size="12" text-anchor="middle" fill="white">ResnetBlock(2048→1024)</text>
+  <text x="690" y="572" font-family="Arial" font-size="12" text-anchor="middle" fill="white">ResnetBlock(1024→1024)</text>
+  <text x="690" y="602" font-family="Arial" font-size="11" text-anchor="middle" fill="white">Output: [B, 1024]</text>
+  <text x="690" y="622" font-family="Arial" font-size="10" text-anchor="middle" fill="white">↓ Skip to Up Block</text>
+  
+  <!-- Downsample 2 -->
+  <path d="M 830 560 L 870 560 L 870 630 L 910 630" stroke="#333" stroke-width="2" marker-end="url(#arrowhead)"/>
+  <text x="890" y="615" font-family="Arial" font-size="10" fill="#666" font-weight="bold">Down</text>
+  
+  <!-- Mid Block -->
+  <rect x="950" y="570" width="280" height="140" fill="#FEF3C7" rx="8" stroke="#FCD34D" stroke-width="2"/>
+  <text x="1090" y="600" font-family="Arial" font-size="15" font-weight="bold" text-anchor="middle" fill="white">Mid Block</text>
+  <text x="1090" y="630" font-family="Arial" font-size="12" text-anchor="middle" fill="white">ResnetBlock(1024→1024)</text>
+  <text x="1090" y="652" font-family="Arial" font-size="12" text-anchor="middle" fill="white">ResnetBlock(1024→1024)</text>
+  <text x="1090" y="682" font-family="Arial" font-size="11" text-anchor="middle" fill="white">Output: [B, 1024]</text>
+  
+  <!-- Upsample 1 -->
+  <path d="M 1230 640 L 1270 640 L 1270 570 L 1310 570" stroke="#333" stroke-width="2" marker-end="url(#arrowhead)"/>
+  <text x="1290" y="620" font-family="Arial" font-size="10" fill="#666" font-weight="bold">Up</text>
+  
+  <!-- Up Block 1 -->
+  <rect x="1350" y="490" width="280" height="140" fill="#FCD34D" rx="8" stroke="#FBBF24" stroke-width="2"/>
+  <text x="1490" y="520" font-family="Arial" font-size="15" font-weight="bold" text-anchor="middle" fill="white">Up Block 1</text>
+  <text x="1490" y="550" font-family="Arial" font-size="12" text-anchor="middle" fill="white">+ Skip from Down 2</text>
+  <text x="1490" y="572" font-family="Arial" font-size="12" text-anchor="middle" fill="white">ResnetBlock(2048→2048)</text>
+  <text x="1490" y="594" font-family="Arial" font-size="12" text-anchor="middle" fill="white">ResnetBlock(2048→2048)</text>
+  <text x="1490" y="624" font-family="Arial" font-size="11" text-anchor="middle" fill="white">Output: [B, 2048]</text>
+  
+  <!-- Upsample 2 -->
+  <path d="M 1350 560 L 1310 560 L 1310 490 L 1270 490" stroke="#333" stroke-width="2" marker-end="url(#arrowhead)"/>
+  <text x="1190" y="535" font-family="Arial" font-size="10" fill="#666" font-weight="bold">Up</text>
+  
+  <!-- Up Block 2 -->
+  <rect x="950" y="410" width="280" height="140" fill="#FDE68A" rx="8" stroke="#FBBF24" stroke-width="2"/>
+  <text x="1090" y="440" font-family="Arial" font-size="15" font-weight="bold" text-anchor="middle" fill="white">Up Block 2</text>
+  <text x="1090" y="470" font-family="Arial" font-size="12" text-anchor="middle" fill="white">+ Skip from Down 1</text>
+  <text x="1090" y="492" font-family="Arial" font-size="12" text-anchor="middle" fill="white">ResnetBlock(2048→2048)</text>
+  <text x="1090" y="514" font-family="Arial" font-size="12" text-anchor="middle" fill="white">ResnetBlock(2048→2048)</text>
+  <text x="1090" y="544" font-family="Arial" font-size="11" text-anchor="middle" fill="white">Output: [B, 2048]</text>
+  
+  <!-- Skip connections -->
+  <path d="M 290 550 L 290 680 L 1490 680 L 1490 635" stroke="#EC4899" stroke-width="2" stroke-dasharray="5,5" marker-end="url(#arrowhead)"/>
+  <text x="320" y="670" font-family="Arial" font-size="10" fill="#EC4899" font-weight="bold">Skip Connection</text>
+  
+  <path d="M 690 630 L 690 700 L 1310 700 L 1310 635" stroke="#EC4899" stroke-width="2" stroke-dasharray="5,5" marker-end="url(#arrowhead)"/>
+  
+  <!-- ==================== Time Embedding Detail ==================== -->
+  <rect x="1000" y="340" width="280" height="230" fill="#FEF3C7" rx="10" stroke="#F59E0B" stroke-width="2"/>
+  <text x="1140" y="370" font-family="Arial" font-size="15" font-weight="bold" text-anchor="middle" fill="#92400E">Time Embedding</text>
+  
+  <rect x="1020" y="390" width="240" height="60" fill="#EC4899" rx="6"/>
+  <text x="1140" y="420" font-family="Arial" font-size="12" font-weight="bold" text-anchor="middle" fill="white">Sinusoidal Position</text>
+  <text x="1140" y="440" font-family="Courier" font-size="9" text-anchor="middle" fill="white">emb(t) = [sin(ω₁t), cos(ω₁t), ...]</text>
+  
+  <rect x="1020" y="460" width="240" height="50" fill="#F472B6" rx="5"/>
+  <text x="1140" y="485" font-family="Arial" font-size="12" font-weight="bold" text-anchor="middle" fill="white">MLP: 512 → 2048</text>
+  <text x="1140" y="505" font-family="Arial" font-size="10" text-anchor="middle" fill="white">Linear + SiLU + Linear</text>
+  
+  <rect x="1020" y="520" width="240" height="40" fill="#DB2777" rx="5"/>
+  <text x="1140" y="545" font-family="Arial" font-size="11" font-weight="bold" text-anchor="middle" fill="white">Output: [B, 512]</text>
+  
+  <!-- ==================== Output Layer ==================== -->
+  <rect x="650" y="910" width="300" height="140" fill="url(#greenGrad)" rx="10" filter="url(#shadow)"/>
+  <text x="800" y="945" font-family="Arial" font-size="17" font-weight="bold" text-anchor="middle" fill="white">Output Layer</text>
+  
+  <rect x="670" y="960" width="260" height="40" fill="rgba(255,255,255,0.25)" rx="5"/>
+  <text x="800" y="985" font-family="Arial" font-size="12" text-anchor="middle" fill="white">SiLU Activation + Linear(2048→350)</text>
+  
+  <rect x="670" y="1010" width="260" height="35" fill="rgba(255,255,255,0.2)" rx="5"/>
+  <text x="800" y="1035" font-family="Arial" font-size="12" font-weight="bold" text-anchor="middle" fill="white">Reshape: [B, 350] → [B, 50, 7]</text>
+  
+  <!-- ==================== Final Output ==================== -->
+  <rect x="650" y="1100" width="300" height="100" fill="url(#redGrad)" rx="10" filter="url(#shadow)"/>
+  <text x="800" y="1135" font-family="Arial" font-size="17" font-weight="bold" text-anchor="middle" fill="white">Velocity Field Output</text>
+  <text x="800" y="1165" font-family="Arial" font-size="14" text-anchor="middle" fill="white">[B, 50, 7]</text>
+  <text x="800" y="1185" font-family="Arial" font-size="11" text-anchor="middle" fill="white">v_θ(x_t, t, context)</text>
+  
+  <!-- ==================== Flow Matching Math ==================== -->
+  <rect x="1050" y="910" width="500" height="290" fill="#FEF3C7" rx="10" stroke="#F59E0B" stroke-width="2"/>
+  <text x="1300" y="945" font-family="Arial" font-size="16" font-weight="bold" text-anchor="middle" fill="#92400E">Flow Matching 数学原理</text>
+  
+  <text x="1070" y="980" font-family="Arial" font-size="12" fill="#78350F" font-weight="bold">1. 常微分方程:</text>
+  <text x="1090" y="1003" font-family="Courier" font-size="11" fill="#78350F">dx_t/dt = v_θ(x_t, t, context)</text>
+  
+  <text x="1070" y="1035" font-family="Arial" font-size="12" fill="#78350F" font-weight="bold">2. 线性插值路径:</text>
+  <text x="1090" y="1058" font-family="Courier" font-size="11" fill="#78350F">x_t = (1-t)·x₀ + t·x₁</text>
+  <text x="1090" y="1078" font-family="Courier" font-size="11" fill="#78350F">dx_t/dt = x₁ - x₀ (目标速度)</text>
+  
+  <text x="1070" y="1110" font-family="Arial" font-size="12" fill="#78350F" font-weight="bold">3. Flow Matching Loss:</text>
+  <text x="1090" y="1133" font-family="Courier" font-size="11" fill="#78350F">L = E[||v_θ(x_t,t,c) - (x₁-x₀)||²]</text>
+  
+  <text x="1070" y="1165" font-family="Arial" font-size="12" fill="#78350F" font-weight="bold">4. 推理 (Euler 积分):</text>
+  <text x="1090" y="1188" font-family="Courier" font-size="11" fill="#78350F">x_{t+Δt} = x_t + Δt · v_θ(x_t, t, c)</text>
+  
+  <!-- 图例 -->
+  <rect x="1050" y="1230" width="500" height="150" fill="#FFFFFF" rx="10" stroke="#333" stroke-width="1"/>
+  <text x="1300" y="1260" font-family="Arial" font-size="14" font-weight="bold" text-anchor="middle" fill="#1E293B">图例说明</text>
+  
+  <rect x="1070" y="1280" width="30" height="20" fill="url(#orangeGrad)" rx="3"/>
+  <text x="1110" y="1295" font-family="Arial" font-size="10" fill="#333">Down Block (下采样)</text>
+  
+  <rect x="1070" y="1310" width="30" height="20" fill="#FDE68A" rx="3"/>
+  <text x="1110" y="1325" font-family="Arial" font-size="10" fill="#333">Up Block (上采样)</text>
+  
+  <rect x="1070" y="1340" width="30" height="20" fill="#FEF3C7" rx="3"/>
+  <text x="1110" y="1355" font-family="Arial" font-size="10" fill="#333">Mid Block (中间层)</text>
+  
+  <line x1="1350" y1="1290" x2="1380" y2="1290" stroke="#EC4899" stroke-width="2" stroke-dasharray="5,5"/>
+  <text x="1390" y="1295" font-family="Arial" font-size="10" fill="#333">Skip Connection</text>
+  
+  <!-- 连接箭头 -->
+  <line x1="340" y1="240" x2="385" y2="240" stroke="#333" stroke-width="2" marker-end="url(#arrowhead)"/>
+  <line x1="630" y1="240" x2="675" y2="240" stroke="#333" stroke-width="2" marker-end="url(#arrowhead)"/>
+  <path d="M 920 240 L 960 240 L 960 380 L 800 380 L 800 405" stroke="#333" stroke-width="2" marker-end="url(#arrowhead)"/>
+  <path d="M 800 860 L 800 905" stroke="#333" stroke-width="2" marker-end="url(#arrowhead)"/>
+  <line x1="800" y1="1050" x2="800" y2="1095" stroke="#333" stroke-width="2" marker-end="url(#arrowhead)"/>
+</svg>
